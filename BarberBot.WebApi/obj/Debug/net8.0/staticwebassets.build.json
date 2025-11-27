@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "x15egFr3Q30g5bdgnkGyJBH6Sno+V8Aef4s1e22ahm0=",
+  "Source": "BarberBot.WebApi",
+  "BasePath": "_content/BarberBot.WebApi",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

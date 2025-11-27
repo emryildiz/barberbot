@@ -1,0 +1,235 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application.UnitTests\\BarberBot.Application.UnitTests.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application.UnitTests\\BarberBot.Application.UnitTests.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application.UnitTests\\BarberBot.Application.UnitTests.csproj",
+        "projectName": "BarberBot.Application.UnitTests",
+        "projectPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application.UnitTests\\BarberBot.Application.UnitTests.csproj",
+        "packagesPath": "C:\\Users\\OPTO_142\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application.UnitTests\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\OPTO_142\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application\\BarberBot.Application.csproj": {
+                "projectPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application\\BarberBot.Application.csproj"
+              },
+              "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\BarberBot.Domain.csproj": {
+                "projectPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\BarberBot.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "FluentAssertions": {
+              "target": "Package",
+              "version": "[8.8.0, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.8.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.20.72, )"
+            },
+            "coverlet.collector": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.5.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application\\BarberBot.Application.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application\\BarberBot.Application.csproj",
+        "projectName": "BarberBot.Application",
+        "projectPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application\\BarberBot.Application.csproj",
+        "packagesPath": "C:\\Users\\OPTO_142\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Application\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\OPTO_142\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {
+              "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\BarberBot.Domain.csproj": {
+                "projectPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\BarberBot.Domain.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "Microsoft.Extensions.DependencyInjection.Abstractions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\BarberBot.Domain.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\BarberBot.Domain.csproj",
+        "projectName": "BarberBot.Domain",
+        "projectPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\BarberBot.Domain.csproj",
+        "packagesPath": "C:\\Users\\OPTO_142\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\OPTO_142\\Desktop\\barberbot\\BarberBot.Domain\\obj\\",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "C:\\Users\\OPTO_142\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        }
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.416/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

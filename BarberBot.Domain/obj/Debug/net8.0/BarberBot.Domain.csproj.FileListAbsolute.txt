@@ -1,0 +1,11 @@
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\bin\Debug\net8.0\BarberBot.Domain.deps.json
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\bin\Debug\net8.0\BarberBot.Domain.dll
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\bin\Debug\net8.0\BarberBot.Domain.pdb
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\BarberBot.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\BarberBot.Domain.AssemblyInfoInputs.cache
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\BarberBot.Domain.AssemblyInfo.cs
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\BarberBot.Domain.csproj.CoreCompileInputs.cache
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\BarberBot.Domain.dll
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\refint\BarberBot.Domain.dll
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\BarberBot.Domain.pdb
+C:\Users\OPTO_142\Desktop\barberbot\BarberBot.Domain\obj\Debug\net8.0\ref\BarberBot.Domain.dll

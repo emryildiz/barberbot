@@ -76,10 +76,10 @@ public class BotService : IBotService
 
         if (message.Equals("Randevu", StringComparison.OrdinalIgnoreCase))
         {
-            var services = await _context.Services.ToListAsync();
-            var serviceList = string.Join("\n", services.Select(s => $"{s.Id}. {s.Name} ({s.Price} TL)"));
+            var services = await _context.Services.OrderBy(s => s.Id).ToListAsync();
+            var serviceList = string.Join("\n", services.Select((s, index) => $"{index + 1}. {s.Name} ({s.Price} TL)"));
             
-            await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"Hoş geldiniz {customer.Name}! Lütfen bir hizmet seçin (ID yazın):\n{serviceList}");
+            await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"Hoş geldiniz {customer.Name}! Lütfen bir hizmet seçin (Numarasını yazın):\n{serviceList}");
             
             customer.CurrentState = "SelectingService";
             await _context.SaveChangesAsync(CancellationToken.None);
@@ -107,17 +107,20 @@ public class BotService : IBotService
 
     private async Task HandleServiceSelection(Customer customer, string message)
     {
-        if (int.TryParse(message, out int serviceId))
+        if (int.TryParse(message, out int selectionIndex) && selectionIndex > 0)
         {
-            var service = await _context.Services.FindAsync(serviceId);
-            if (service != null)
+            var services = await _context.Services.OrderBy(s => s.Id).ToListAsync();
+            
+            if (selectionIndex <= services.Count)
             {
-                customer.SelectedServiceId = serviceId;
+                var service = services[selectionIndex - 1];
+                customer.SelectedServiceId = service.Id;
                 
                 var barbers = await _context.Users
-                    .Where(u => u.Role == "Barber" || u.Role == "Owner")
+                    .Where(u => (u.Role == "Barber" || u.Role == "Owner") && u.IsActive && !u.IsOnLeave)
+                    .OrderBy(u => u.Id)
                     .ToListAsync();
-                var barberList = string.Join("\n", barbers.Select(b => $"{b.Id}. {b.Username}"));
+                var barberList = string.Join("\n", barbers.Select((b, index) => $"{index + 1}. {b.Username}"));
 
                 await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"Harika! {service.Name} seçtiniz. Şimdi bir berber seçin:\n{barberList}");
                 
@@ -127,17 +130,22 @@ public class BotService : IBotService
             }
         }
         
-        await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Geçersiz hizmet ID'si. Lütfen tekrar deneyin.");
+        await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Geçersiz hizmet numarası. Lütfen tekrar deneyin.");
     }
 
     private async Task HandleBarberSelection(Customer customer, string message)
     {
-        if (int.TryParse(message, out int userId))
+        if (int.TryParse(message, out int selectionIndex) && selectionIndex > 0)
         {
-            var user = await _context.Users.FindAsync(userId);
-            if (user != null && (user.Role == "Barber" || user.Role == "Owner"))
+            var barbers = await _context.Users
+                .Where(u => (u.Role == "Barber" || u.Role == "Owner") && u.IsActive && !u.IsOnLeave)
+                .OrderBy(u => u.Id)
+                .ToListAsync();
+
+            if (selectionIndex <= barbers.Count)
             {
-                customer.SelectedUserId = userId;
+                var user = barbers[selectionIndex - 1];
+                customer.SelectedUserId = user.Id;
                 
                 await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"{user.Username} seçildi. Hangi tarihte gelmek istersiniz? (Örn: 25.11.2023, Bugün, Yarın)");
                 
@@ -147,20 +155,22 @@ public class BotService : IBotService
             }
         }
 
-        await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Geçersiz berber ID'si. Lütfen tekrar deneyin.");
+        await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Geçersiz berber numarası. Lütfen tekrar deneyin.");
     }
 
     private async Task HandleDateSelection(Customer customer, string message)
     {
         DateTime? selectedDate = null;
 
+        var turkeyNow = DateTime.UtcNow.AddHours(3);
+
         if (message.Equals("bugün", StringComparison.OrdinalIgnoreCase))
         {
-            selectedDate = DateTime.Today;
+            selectedDate = turkeyNow.Date;
         }
         else if (message.Equals("yarın", StringComparison.OrdinalIgnoreCase))
         {
-            selectedDate = DateTime.Today.AddDays(1);
+            selectedDate = turkeyNow.Date.AddDays(1);
         }
 
         else if (DateTime.TryParseExact(message, new[] { "dd.MM.yyyy", "d.M.yyyy", "dd-MM-yyyy", "yyyy-MM-dd" }, 
@@ -183,15 +193,65 @@ public class BotService : IBotService
 
             customer.SelectedDate = selectedDate.Value;
             
-            // Simplified: Assume slots are 10:00, 11:00, ... 19:30
-            // In real app, check availability
-            var slots = new List<string> 
-            { 
-                "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", 
-                "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", 
-                "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", 
-                "19:00", "19:30" 
-            };
+            // Parse DB times strictly
+            if (!TimeSpan.TryParse(workingHour.StartTime, out TimeSpan start)) start = new TimeSpan(9, 0, 0);
+            if (!TimeSpan.TryParse(workingHour.EndTime, out TimeSpan end)) end = new TimeSpan(21, 0, 0);
+
+            // Fetch existing appointments for the selected barber and date
+            var existingAppointments = await _context.Appointments
+                .Where(a => a.UserId == customer.SelectedUserId && 
+                            a.StartTime.Date == selectedDate.Value.Date && 
+                            a.Status != "Cancelled")
+                .ToListAsync();
+
+            var service = await _context.Services.FindAsync(customer.SelectedServiceId);
+            var serviceDuration = service?.DurationMinutes ?? 30;
+
+            var slots = new List<string>();
+            var current = start;
+            
+            // Turkey Time (UTC+3)
+            var turkeyTime = DateTime.UtcNow.AddHours(3);
+            var isToday = selectedDate.Value.Date == turkeyTime.Date;
+
+            while (current < end)
+            {
+                // If it's today, filter out passed times (buffer 15 mins)
+                if (isToday && current <= turkeyTime.TimeOfDay.Add(TimeSpan.FromMinutes(15)))
+                {
+                    current = current.Add(TimeSpan.FromMinutes(30));
+                    continue;
+                }
+
+                // Check for overlap with existing appointments
+                var slotStart = current;
+                var slotEnd = current.Add(TimeSpan.FromMinutes(serviceDuration));
+                
+                // Ensure slot doesn't exceed working hours
+                if (slotEnd > end)
+                {
+                     current = current.Add(TimeSpan.FromMinutes(30));
+                     continue;
+                }
+
+                // Existing appointments are in UTC, convert to TRT for comparison
+                var isOverlapping = existingAppointments.Any(a => 
+                    a.StartTime.AddHours(3).TimeOfDay < slotEnd && a.EndTime.AddHours(3).TimeOfDay > slotStart);
+
+                if (!isOverlapping)
+                {
+                    slots.Add(current.ToString(@"hh\:mm"));
+                }
+                
+                current = current.Add(TimeSpan.FromMinutes(30));
+            }
+
+            if (!slots.Any())
+            {
+                 await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Seçtiğiniz tarihte uygun saat kalmadı. Lütfen başka bir tarih seçiniz.");
+                 return;
+            }
+
             var slotList = string.Join("\n", slots);
 
             await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"Tarih: {selectedDate.Value.ToString("dd.MM.yyyy")}. Lütfen saat seçin:\n{slotList}");
@@ -239,11 +299,15 @@ public class BotService : IBotService
                 return;
             }
 
-            // Check availability
+            // Convert to UTC for DB operations (TRT - 3 hours)
+            var startTimeUtc = startTime.AddHours(-3);
+            var endTimeUtc = endTime.AddHours(-3);
+
+            // Check availability using UTC times
             var isAvailable = !await _context.Appointments
                 .AnyAsync(a => a.UserId == customer.SelectedUserId &&
-                               a.StartTime < endTime &&
-                               a.EndTime > startTime &&
+                               a.StartTime < endTimeUtc &&
+                               a.EndTime > startTimeUtc &&
                                a.Status != "Cancelled"); // Ignore cancelled appointments
 
             if (!isAvailable)
@@ -257,8 +321,8 @@ public class BotService : IBotService
                 CustomerId = customer.Id,
                 UserId = customer.SelectedUserId!.Value,
                 ServiceId = customer.SelectedServiceId!.Value,
-                StartTime = startTime,
-                EndTime = endTime,
+                StartTime = startTimeUtc,
+                EndTime = endTimeUtc,
                 Status = "Pending"
             };
 

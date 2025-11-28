@@ -74,8 +74,10 @@ const AddAppointmentPage = () => {
                 customerId = customerRes.data.id;
             }
 
-            // Combine date and time
-            const startDateTime = new Date(`${formData.date}T${formData.time}`);
+            // Combine date and time, explicitly setting Turkey Time (+03:00)
+            // This ensures that if user selects 20:00, it is treated as 20:00 TRT (17:00 UTC)
+            // regardless of the browser's local timezone.
+            const startDateTime = new Date(`${formData.date}T${formData.time}:00+03:00`);
 
             // Find service duration to calculate end time
             const service = services.find(s => s.id === parseInt(formData.serviceId));
@@ -247,16 +249,26 @@ const AddAppointmentPage = () => {
                             />
                         </Box>
                         <Box sx={{ flex: 1 }}>
-                            <TextField
-                                fullWidth
-                                type="time"
-                                label="Saat"
-                                name="time"
-                                value={formData.time}
-                                onChange={handleChange}
-                                required
-                                InputLabelProps={{ shrink: true }}
-                            />
+                            <FormControl fullWidth required>
+                                <InputLabel>Saat</InputLabel>
+                                <Select
+                                    name="time"
+                                    value={formData.time}
+                                    label="Saat"
+                                    onChange={handleChange}
+                                >
+                                    {Array.from({ length: 24 * 2 }).map((_, i) => {
+                                        const hour = Math.floor(i / 2);
+                                        const minute = i % 2 === 0 ? '00' : '30';
+                                        const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
+                                        return (
+                                            <MenuItem key={timeString} value={timeString}>
+                                                {timeString}
+                                            </MenuItem>
+                                        );
+                                    })}
+                                </Select>
+                            </FormControl>
                         </Box>
                     </Box>
 

@@ -26,6 +26,11 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, User?>
             return null;
         }
 
+        if (!user.IsActive)
+        {
+            return null;
+        }
+
         return user;
     }
 }

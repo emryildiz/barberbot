@@ -1,0 +1,11 @@
+version: "2"
+authtoken: 35xjMPDM7kcsFbtUdYLPYvMVFae_2kz4tcQfT6k6yKF6evaFZ # Ngrok panelinden aldığın token
+tunnels:
+  backend:
+    proto: http
+    addr: https://127.0.0.1:5117 # .NET API Portun
+    hostname: nondialyzing-hyperbolic-avianna.ngrok-free.dev
+    host_header: rewrite         # .NET için bu satır zorunlu!
+  frontend:
+    proto: http
+    addr: http://127.0.0.1:5173  # React (Vite) Portun

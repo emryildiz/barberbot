@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -31,6 +31,7 @@ import api from '../../services/api';
 
 const AppointmentsPage = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -42,29 +43,35 @@ const AppointmentsPage = () => {
     const [selectedBarber, setSelectedBarber] = useState('');
     const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
 
+    // Get search query from URL
+    const searchParams = new URLSearchParams(location.search);
+    const searchQuery = searchParams.get('search') || '';
+
     useEffect(() => {
         loadData();
+        const interval = setInterval(loadData, 30000); // Poll every 30 seconds
+        return () => clearInterval(interval);
     }, []);
 
     useEffect(() => {
         applyFiltersAndSort();
-    }, [appointments, selectedBarber, sortOrder]);
+    }, [appointments, selectedBarber, sortOrder, searchQuery]);
 
-    const loadData = async () => {
-        try {
-            const [appointmentsRes, barbersRes] = await Promise.all([
-                api.get('/appointments'),
-                api.get('/barbers')
-            ]);
-            setAppointments(appointmentsRes.data);
-            setBarbers(barbersRes.data);
-        } catch (error) {
-            console.error('Error loading data:', error);
-        }
-    };
+    // ... loadData ...
 
     const applyFiltersAndSort = () => {
         let result = [...appointments];
+
+        // Filter by Search Query
+        if (searchQuery) {
+            const lowerQuery = searchQuery.toLowerCase();
+            result = result.filter(app =>
+                app.customer?.name?.toLowerCase().includes(lowerQuery) ||
+                app.customer?.phoneNumber?.includes(lowerQuery) ||
+                app.service?.name?.toLowerCase().includes(lowerQuery) ||
+                app.user?.username?.toLowerCase().includes(lowerQuery)
+            );
+        }
 
         // Filter by Barber
         if (selectedBarber) {
@@ -80,6 +87,21 @@ const AppointmentsPage = () => {
 
         setFilteredAppointments(result);
     };
+
+    const loadData = async () => {
+        try {
+            const [appointmentsRes, barbersRes] = await Promise.all([
+                api.get('/appointments'),
+                api.get('/barbers')
+            ]);
+            setAppointments(appointmentsRes.data);
+            setBarbers(barbersRes.data);
+        } catch (error) {
+            console.error('Error loading data:', error);
+        }
+    };
+
+
 
     const handleDelete = async (id) => {
         if (window.confirm('Bu randevuyu silmek istediğinizden emin misiniz?')) {
@@ -112,12 +134,13 @@ const AppointmentsPage = () => {
         return new Date(dateString) < new Date();
     };
 
+
     const renderMobileView = () => (
         <Grid container spacing={2}>
             {filteredAppointments.map((app) => {
                 const past = isPast(app.startTime);
                 return (
-                    <Grid item xs={12} key={app.id}>
+                    <Grid size={{ xs: 12 }} key={app.id}>
                         <Card sx={{
                             opacity: past ? 0.7 : 1,
                             border: '1px solid rgba(0, 0, 0, 0.12)',
@@ -138,6 +161,7 @@ const AppointmentsPage = () => {
                                         color={past ? "default" : "primary"}
                                         variant={past ? "filled" : "outlined"}
                                         size="small"
+                                        sx={{ bgcolor: past ? undefined : '#e3f2fd', color: past ? undefined : '#1976d2', fontWeight: 'bold' }}
                                     />
                                 </Box>
 
@@ -179,7 +203,7 @@ const AppointmentsPage = () => {
                 );
             })}
             {filteredAppointments.length === 0 && (
-                <Grid item xs={12}>
+                <Grid size={{ xs: 12 }}>
                     <Typography align="center" color="text.secondary" sx={{ py: 4 }}>
                         {appointments.length === 0 ? 'Henüz randevu bulunmamaktadır.' : 'Filtrelere uygun randevu bulunamadı.'}
                     </Typography>

@@ -64,6 +64,8 @@ public class AuthController : ControllerBase
         var refreshToken = _jwtTokenGenerator.GenerateRefreshToken();
 
         SetRefreshToken(refreshToken);
+        SetAccessToken(token);
+        SetRole(user.Role);
 
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
@@ -95,6 +97,8 @@ public class AuthController : ControllerBase
         var newRefreshToken = _jwtTokenGenerator.GenerateRefreshToken();
 
         SetRefreshToken(newRefreshToken);
+        SetAccessToken(newAccessToken);
+        SetRole(user.Role);
 
         user.RefreshToken = newRefreshToken;
         await _context.SaveChangesAsync(CancellationToken.None);
@@ -127,6 +131,27 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+        {
+            return Unauthorized();
+        }
+
+        var command = new BarberBot.Application.Auth.Commands.ChangePassword.ChangePasswordCommand(userId, request.CurrentPassword, request.NewPassword);
+        var result = await _mediator.Send(command);
+
+        if (!result)
+        {
+            return BadRequest("Mevcut şifre hatalı veya kullanıcı bulunamadı.");
+        }
+
+        return Ok("Şifre başarıyla değiştirildi.");
+    }
+
     private void SetRefreshToken(string refreshToken)
     {
         var cookieOptions = new CookieOptions
@@ -138,4 +163,30 @@ public class AuthController : ControllerBase
         };
         Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
     }
+
+    private void SetAccessToken(string token)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            SameSite = SameSiteMode.Strict,
+            Secure = true
+        };
+        Response.Cookies.Append("accessToken", token, cookieOptions);
+    }
+
+    private void SetRole(string role)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = DateTime.UtcNow.AddDays(7),
+            SameSite = SameSiteMode.Strict,
+            Secure = true
+        };
+        Response.Cookies.Append("role", role, cookieOptions);
+    }
 }
+
+public record ChangePasswordRequest(string CurrentPassword, string NewPassword);

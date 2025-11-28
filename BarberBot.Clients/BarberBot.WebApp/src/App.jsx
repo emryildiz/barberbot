@@ -17,6 +17,7 @@ import CustomersPage from './pages/admin/CustomersPage';
 import ServicesPage from './pages/admin/ServicesPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import UsersPage from './pages/admin/UsersPage';
+import ProfilePage from './pages/admin/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
               <Route path="services" element={<ServicesPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="users" element={<UsersPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
           </Route>
 

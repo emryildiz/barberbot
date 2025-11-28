@@ -33,7 +33,8 @@ import {
     Search as SearchIcon,
     Notifications as NotificationsIcon,
     Logout,
-    CheckCircle
+    CheckCircle,
+    Person as PersonIcon
 } from '@mui/icons-material';
 import authService from '../services/authService';
 import api from '../services/api';
@@ -52,9 +53,7 @@ const AdminLayout = () => {
     const fetchPendingAppointments = async () => {
         try {
             const response = await api.get('/appointments');
-            console.log('All appointments:', response.data);
             const pending = response.data.filter(app => app.status === 'Pending');
-            console.log('Pending appointments:', pending);
             setPendingAppointments(pending);
         } catch (error) {
             console.error('Error fetching pending appointments:', error);
@@ -151,7 +150,10 @@ const AdminLayout = () => {
                     <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
                         <ListItemButton
                             selected={location.pathname === item.path}
-                            onClick={() => navigate(item.path)}
+                            onClick={() => {
+                                navigate(item.path);
+                                setMobileOpen(false);
+                            }}
                             sx={{
                                 borderRadius: 2,
                                 '&.Mui-selected': {
@@ -202,6 +204,14 @@ const AdminLayout = () => {
                     anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
                     transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
                 >
+                    <MenuItem onClick={() => {
+                        handleClose();
+                        navigate('/admin/profile');
+                    }}>
+                        <ListItemIcon><PersonIcon fontSize="small" /></ListItemIcon>
+                        Profil
+                    </MenuItem>
+                    <Divider />
                     <MenuItem onClick={handleLogout}>
                         <ListItemIcon><Logout fontSize="small" /></ListItemIcon>
                         Çıkış Yap
@@ -247,7 +257,15 @@ const AdminLayout = () => {
                         border: '1px solid #e0e0e0'
                     }}>
                         <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
-                        <InputBase placeholder="Müşteri ara, randevu bul..." fullWidth />
+                        <InputBase
+                            placeholder="Müşteri ara, randevu bul..."
+                            fullWidth
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    navigate(`/admin/appointments?search=${e.target.value}`);
+                                }
+                            }}
+                        />
                     </Box>
 
                     <Box sx={{ flexGrow: 1 }} />
@@ -338,7 +356,14 @@ const AdminLayout = () => {
             </Box>
             <Box
                 component="main"
-                sx={{ flexGrow: 1, p: 3, width: { sm: `calc(100% - ${drawerWidth}px)` }, bgcolor: '#f5f6fa', minHeight: '100vh' }}
+                sx={{
+                    flexGrow: 1,
+                    p: { xs: 1, sm: 3 },
+                    width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
+                    bgcolor: '#f5f6fa',
+                    minHeight: '100vh',
+                    overflowX: 'hidden' // Prevent horizontal scroll
+                }}
             >
                 <Toolbar />
                 <Outlet />

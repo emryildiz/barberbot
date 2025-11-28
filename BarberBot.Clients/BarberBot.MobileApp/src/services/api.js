@@ -1,14 +1,18 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { navigate } from './navigationRef';
 
 // 10.0.2.2 is the special alias to your host loopback interface (i.e., 127.0.0.1 on your development machine)
 // for the Android emulator.
 // For iOS simulator, you can use 'http://localhost:5117/api'
 // For physical device, use your machine's LAN IP, e.g., 'http://192.168.1.x:5117/api'
-const API_URL = 'https://nondialyzing-hyperbolic-avianna.ngrok-free.dev7/api';
+const API_URL = 'http://localhost:5117/api';
 
 const api = axios.create({
     baseURL: API_URL,
+    headers: {
+        'ngrok-skip-browser-warning': 'true'
+    }
 });
 
 api.interceptors.request.use(async (config) => {
@@ -45,8 +49,10 @@ api.interceptors.response.use(
             } catch (err) {
                 await AsyncStorage.removeItem('token');
                 await AsyncStorage.removeItem('refreshToken');
-                // Navigation to login should be handled by the app state (e.g. context or redux)
-                // For now, we just reject and let the UI handle the error
+
+                // Navigate to Login screen
+                navigate('Login');
+
                 return Promise.reject(err);
             }
         }

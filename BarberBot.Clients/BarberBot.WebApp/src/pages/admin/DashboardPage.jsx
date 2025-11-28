@@ -14,7 +14,9 @@ import {
     TableRow,
     Chip,
     Button,
-    CircularProgress
+    CircularProgress,
+    Menu,
+    MenuItem
 } from '@mui/material';
 import {
     CalendarToday,
@@ -37,13 +39,18 @@ const DashboardPage = () => {
         monthlyRevenue: 0
     });
     const [todayAppointmentsList, setTodayAppointmentsList] = useState([]);
+    const [filteredTodayList, setFilteredTodayList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+    const [filterStatus, setFilterStatus] = useState('All'); // 'All', 'Pending', 'Confirmed'
 
     const [role, setRole] = useState(null);
 
     useEffect(() => {
         fetchDashboardData();
         fetchRole();
+        const interval = setInterval(fetchDashboardData, 30000); // Poll every 30 seconds
+        return () => clearInterval(interval);
     }, []);
 
     const fetchRole = async () => {
@@ -79,6 +86,7 @@ const DashboardPage = () => {
             });
 
             setTodayAppointmentsList(todayApps);
+            setFilteredTodayList(todayApps);
 
         } catch (error) {
             console.error("Error fetching dashboard data:", error);
@@ -86,6 +94,27 @@ const DashboardPage = () => {
             setLoading(false);
         }
     };
+
+    const handleFilterClick = (event) => {
+        setFilterAnchorEl(event.currentTarget);
+    };
+
+    const handleFilterClose = () => {
+        setFilterAnchorEl(null);
+    };
+
+    const handleFilterSelect = (status) => {
+        setFilterStatus(status);
+        handleFilterClose();
+    };
+
+    useEffect(() => {
+        if (filterStatus === 'All') {
+            setFilteredTodayList(todayAppointmentsList);
+        } else {
+            setFilteredTodayList(todayAppointmentsList.filter(app => app.status === filterStatus));
+        }
+    }, [filterStatus, todayAppointmentsList]);
 
     const StatCard = ({ title, value, icon, color }) => (
         <Card sx={{
@@ -146,7 +175,7 @@ const DashboardPage = () => {
 
             {/* Stats Grid */}
             <Grid container spacing={3} mb={4}>
-                <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
                     <StatCard
                         title="Bugünkü Randevular"
                         value={stats.todayAppointments}
@@ -154,7 +183,7 @@ const DashboardPage = () => {
                         color="#4caf50"
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
                     <StatCard
                         title="Bekleyen Onaylar"
                         value={stats.pendingApprovals}
@@ -162,7 +191,7 @@ const DashboardPage = () => {
                         color="#2196f3"
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+                <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
                     <StatCard
                         title="Toplam Müşteriler"
                         value={stats.totalCustomers}
@@ -171,7 +200,7 @@ const DashboardPage = () => {
                     />
                 </Grid>
                 {role === 'Admin' && (
-                    <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex' }}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
                         <StatCard
                             title="Aylık Gelir"
                             value={`₺${stats.monthlyRevenue.toLocaleString('tr-TR')}`}
@@ -184,18 +213,35 @@ const DashboardPage = () => {
 
             {/* Main Content - Today's Appointments */}
             <Paper sx={{ p: 3, borderRadius: 3, boxShadow: 'none', border: '1px solid rgba(0,0,0,0.08)' }}>
-                <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Box
+                    display="flex"
+                    flexDirection={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ xs: 'flex-start', sm: 'center' }}
+                    mb={3}
+                    gap={2}
+                >
                     <Typography variant="h6" fontWeight="bold" color="text.primary">
                         Bugünkü Randevular
                     </Typography>
-                    <Box>
+                    <Box sx={{ alignSelf: { xs: 'flex-end', sm: 'auto' }, display: 'flex', gap: 1 }}>
                         <Button
                             variant="outlined"
                             startIcon={<FilterList />}
-                            sx={{ mr: 1, borderRadius: 2, color: 'text.primary', borderColor: 'rgba(0,0,0,0.12)' }}
+                            onClick={handleFilterClick}
+                            sx={{ borderRadius: 2, color: 'text.primary', borderColor: 'rgba(0,0,0,0.12)' }}
                         >
-                            Filtrele
+                            Filtrele {filterStatus !== 'All' && `(${filterStatus === 'Pending' ? 'Bekleyen' : 'Onaylı'})`}
                         </Button>
+                        <Menu
+                            anchorEl={filterAnchorEl}
+                            open={Boolean(filterAnchorEl)}
+                            onClose={handleFilterClose}
+                        >
+                            <MenuItem onClick={() => handleFilterSelect('All')}>Tümü</MenuItem>
+                            <MenuItem onClick={() => handleFilterSelect('Pending')}>Bekleyenler</MenuItem>
+                            <MenuItem onClick={() => handleFilterSelect('Confirmed')}>Onaylananlar</MenuItem>
+                        </Menu>
                         <Button
                             variant="contained"
                             startIcon={<Add />}
@@ -207,7 +253,7 @@ const DashboardPage = () => {
                     </Box>
                 </Box>
 
-                <TableContainer>
+                <TableContainer sx={{ overflowX: 'auto' }}>
                     <Table>
                         <TableHead>
                             <TableRow sx={{ bgcolor: '#f9fafb' }}>
@@ -219,8 +265,8 @@ const DashboardPage = () => {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {todayAppointmentsList.length > 0 ? (
-                                todayAppointmentsList.map((app) => (
+                            {filteredTodayList.length > 0 ? (
+                                filteredTodayList.map((app) => (
                                     <TableRow key={app.id} hover>
                                         <TableCell>
                                             <Typography variant="subtitle2" fontWeight="bold">{app.customer?.name}</Typography>
@@ -260,7 +306,7 @@ const DashboardPage = () => {
 
                 <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
                     <Typography variant="caption" color="text.secondary">
-                        Toplam {todayAppointmentsList.length} kayıt gösteriliyor
+                        Toplam {filteredTodayList.length} kayıt gösteriliyor
                     </Typography>
                 </Box>
             </Paper>

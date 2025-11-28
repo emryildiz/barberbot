@@ -20,7 +20,7 @@ public class GetBarbersQueryHandler : IRequestHandler<GetBarbersQuery, List<User
     {
         // Get users with Barber or Owner role (not Admin)
         var users = await _context.Users
-            .Where(u => u.Role == "Barber" || u.Role == "Owner")
+            .Where(u => (u.Role == "Barber" || u.Role == "Owner") && u.IsActive && !u.IsOnLeave)
             .ToListAsync(cancellationToken);
 
         return users;

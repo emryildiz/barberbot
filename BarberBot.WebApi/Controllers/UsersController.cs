@@ -1,6 +1,7 @@
 using BarberBot.Application.DTOs;
 using BarberBot.Application.Users.Commands.CreateUser;
 using BarberBot.Application.Users.Commands.DeleteUser;
+using BarberBot.Application.Users.Commands.UpdateUserStatus;
 using BarberBot.Application.Users.Queries.GetUsers;
 using BarberBot.Domain.Entities;
 using MediatR;
@@ -61,5 +62,19 @@ public class UsersController : ControllerBase
 
         return NoContent();
     }
+    [HttpPut("{id}/status")]
+    public async Task<IActionResult> UpdateUserStatus(int id, [FromBody] UpdateUserStatusRequest request)
+    {
+        var result = await _mediator.Send(new UpdateUserStatusCommand(id, request.IsActive, request.IsOnLeave));
+
+        if (!result)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }
+
+public record UpdateUserStatusRequest(bool IsActive, bool IsOnLeave);
 

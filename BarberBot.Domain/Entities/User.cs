@@ -8,5 +8,7 @@ public class User
     public string Role { get; set; } = "Staff"; // Admin, Staff
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
+    public bool IsActive { get; set; } = true;
+    public bool IsOnLeave { get; set; } = false;
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

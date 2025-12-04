@@ -68,13 +68,13 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    
-    // Seed Database
-    using (var scope = app.Services.CreateScope())
-    {
-        var context = scope.ServiceProvider.GetRequiredService<BarberBot.Infrastructure.Data.AppDbContext>();
-        BarberBot.Infrastructure.Data.DbInitializer.Initialize(context);
-    }
+}
+
+// Seed Database
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<BarberBot.Infrastructure.Data.AppDbContext>();
+    BarberBot.Infrastructure.Data.DbInitializer.Initialize(context);
 }
 
 // app.UseHttpsRedirection(); // Disabled for ngrok compatibility

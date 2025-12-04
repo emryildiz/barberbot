@@ -1,4 +1,5 @@
 using BarberBot.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace BarberBot.Infrastructure.Data;
 
@@ -6,8 +7,7 @@ public static class DbInitializer
 {
     public static void Initialize(AppDbContext context)
     {
-        context.Database.EnsureDeleted(); // Reset DB to apply schema changes
-        context.Database.EnsureCreated();
+        context.Database.Migrate();
 
         // Look for any users.
         if (context.Users.Any())

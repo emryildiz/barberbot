@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:15-alpine
     container_name: barberbot-db
     environment:
       - POSTGRES_DB=BarberBotDb

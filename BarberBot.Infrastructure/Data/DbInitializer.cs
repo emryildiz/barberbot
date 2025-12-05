@@ -1,3 +1,4 @@
+using BarberBot.Application.Common.Interfaces;
 using BarberBot.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -5,7 +6,7 @@ namespace BarberBot.Infrastructure.Data;
 
 public static class DbInitializer
 {
-    public static void Initialize(AppDbContext context)
+    public static void Initialize(AppDbContext context, IPasswordHasher passwordHasher)
     {
         if (context.Database.IsRelational())
         {
@@ -25,19 +26,19 @@ public static class DbInitializer
         var admin = new User
         {
             Username = "admin",
-            PasswordHash = "1234", // In a real app, this should be hashed
+            PasswordHash = passwordHasher.Hash("1234"),
             Role = "Admin"
         };
         var owner = new User
         {
             Username = "owner",
-            PasswordHash = "1234", // In a real app, this should be hashed
+            PasswordHash = passwordHasher.Hash("1234"),
             Role = "Owner"
         };
         var barber = new User
         {
             Username = "barber",
-            PasswordHash = "1234", // In a real app, this should be hashed
+            PasswordHash = passwordHasher.Hash("1234"),
             Role = "Barber"
         };
 

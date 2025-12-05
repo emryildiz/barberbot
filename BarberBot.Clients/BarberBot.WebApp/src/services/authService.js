@@ -2,8 +2,8 @@ import api from './api';
 
 
 const authService = {
-    login: async (username, password) => {
-        const response = await api.post('/auth/login', { username, password });
+    login: async (username, password, rememberMe) => {
+        const response = await api.post('/auth/login', { username, password, rememberMe });
         if (response.data.token) {
             localStorage.setItem('token', response.data.token);
             // Role is no longer stored in localStorage

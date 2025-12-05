@@ -63,12 +63,14 @@ public class AuthController : ControllerBase
         var token = _jwtTokenGenerator.GenerateToken(user);
         var refreshToken = _jwtTokenGenerator.GenerateRefreshToken();
 
-        SetRefreshToken(refreshToken);
+        var refreshTokenExpiry = request.RememberMe ? DateTime.UtcNow.AddDays(30) : DateTime.UtcNow.AddDays(7);
+
+        SetRefreshToken(refreshToken, refreshTokenExpiry);
         SetAccessToken(token);
         SetRole(user.Role);
 
         user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+        user.RefreshTokenExpiryTime = refreshTokenExpiry;
         await _context.SaveChangesAsync(CancellationToken.None);
 
         // Remove Role from response as requested
@@ -96,7 +98,7 @@ public class AuthController : ControllerBase
         var newAccessToken = _jwtTokenGenerator.GenerateToken(user);
         var newRefreshToken = _jwtTokenGenerator.GenerateRefreshToken();
 
-        SetRefreshToken(newRefreshToken);
+        SetRefreshToken(newRefreshToken, DateTime.UtcNow.AddDays(7)); // Default 7 days for refresh
         SetAccessToken(newAccessToken);
         SetRole(user.Role);
 
@@ -152,12 +154,12 @@ public class AuthController : ControllerBase
         return Ok("Şifre başarıyla değiştirildi.");
     }
 
-    private void SetRefreshToken(string refreshToken)
+    private void SetRefreshToken(string refreshToken, DateTime expires)
     {
         var cookieOptions = new CookieOptions
         {
             HttpOnly = true,
-            Expires = DateTime.UtcNow.AddDays(7),
+            Expires = expires,
             SameSite = SameSiteMode.Strict,
             Secure = true 
         };

@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<AppDbContext>());
         services.AddTransient<IWhatsAppService, WhatsAppService>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddHostedService<AppointmentReminderService>();
 
         return services;

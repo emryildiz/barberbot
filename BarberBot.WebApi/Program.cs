@@ -76,7 +76,8 @@ if (app.Environment.IsDevelopment())
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<BarberBot.Infrastructure.Data.AppDbContext>();
-    BarberBot.Infrastructure.Data.DbInitializer.Initialize(context);
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<BarberBot.Application.Common.Interfaces.IPasswordHasher>();
+    BarberBot.Infrastructure.Data.DbInitializer.Initialize(context, passwordHasher);
 }
 
 // app.UseHttpsRedirection(); // Disabled for ngrok compatibility

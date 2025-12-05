@@ -9,10 +9,12 @@ public record ChangePasswordCommand(int UserId, string CurrentPassword, string N
 public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordCommand, bool>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public ChangePasswordCommandHandler(IApplicationDbContext context)
+    public ChangePasswordCommandHandler(IApplicationDbContext context, IPasswordHasher passwordHasher)
     {
         _context = context;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<bool> Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
@@ -25,15 +27,12 @@ public class ChangePasswordCommandHandler : IRequestHandler<ChangePasswordComman
         }
 
         // Verify current password
-        // Note: In a real app, passwords should be hashed. 
-        // Since the current implementation uses plain text (as noted in previous summaries), we compare directly.
-        // TODO: Implement hashing later.
-        if (user.PasswordHash != request.CurrentPassword)
+        if (!_passwordHasher.Verify(request.CurrentPassword, user.PasswordHash))
         {
             return false;
         }
 
-        user.PasswordHash = request.NewPassword;
+        user.PasswordHash = _passwordHasher.Hash(request.NewPassword);
         await _context.SaveChangesAsync(cancellationToken);
 
         return true;

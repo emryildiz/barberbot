@@ -10,10 +10,12 @@ public record LoginCommand(string Username, string Password) : IRequest<User?>;
 public class LoginCommandHandler : IRequestHandler<LoginCommand, User?>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public LoginCommandHandler(IApplicationDbContext context)
+    public LoginCommandHandler(IApplicationDbContext context, IPasswordHasher passwordHasher)
     {
         _context = context;
+        _passwordHasher = passwordHasher;
     }
 
     public async Task<User?> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -21,7 +23,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, User?>
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Username == request.Username, cancellationToken);
 
-        if (user == null || user.PasswordHash != request.Password) // In real app, verify hash
+        if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
             return null;
         }

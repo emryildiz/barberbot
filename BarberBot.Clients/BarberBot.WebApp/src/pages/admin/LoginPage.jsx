@@ -7,13 +7,16 @@ import {
     TextField,
     Button,
     Box,
-    Alert
+    Alert,
+    Checkbox,
+    FormControlLabel
 } from '@mui/material';
 import authService from '../../services/authService';
 
 const LoginPage = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -26,7 +29,7 @@ const LoginPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await authService.login(username, password);
+            await authService.login(username, password, rememberMe);
             navigate('/admin');
         } catch (err) {
             setError('Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
@@ -91,6 +94,17 @@ const LoginPage = () => {
                             autoComplete="current-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    value="remember"
+                                    color="primary"
+                                    checked={rememberMe}
+                                    onChange={(e) => setRememberMe(e.target.checked)}
+                                />
+                            }
+                            label="Beni Hatırla"
                         />
                         <Button
                             type="submit"

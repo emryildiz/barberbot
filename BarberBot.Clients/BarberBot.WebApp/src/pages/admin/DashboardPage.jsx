@@ -256,7 +256,7 @@ const DashboardPage = () => {
                             onClick={handleFilterClick}
                             sx={{ borderRadius: 2, color: 'text.primary', borderColor: 'rgba(0,0,0,0.12)' }}
                         >
-                            Filtrele {(!isMobile && filterStatus !== 'All') && `(${filterStatus === 'Pending' ? 'Bekleyen' : 'Onaylı'})`}
+                            Filtrele {(!isMobile && filterStatus !== 'All') && `(${filterStatus === 'Pending' ? 'Bekleyen' : filterStatus === 'Confirmed' ? 'Onaylı' : 'İptal'})`}
                         </Button>
                         <Menu
                             anchorEl={filterAnchorEl}
@@ -266,6 +266,7 @@ const DashboardPage = () => {
                             <MenuItem onClick={() => handleFilterSelect('All')}>Tümü</MenuItem>
                             <MenuItem onClick={() => handleFilterSelect('Pending')}>Bekleyenler</MenuItem>
                             <MenuItem onClick={() => handleFilterSelect('Confirmed')}>Onaylananlar</MenuItem>
+                            <MenuItem onClick={() => handleFilterSelect('Cancelled')}>İptal Edilenler</MenuItem>
                         </Menu>
                         <Button
                             variant="contained"
@@ -309,8 +310,8 @@ const DashboardPage = () => {
                                         <TableCell>{app.user?.username}</TableCell>
                                         <TableCell>
                                             <Chip
-                                                label={app.status === 'Pending' ? 'Bekliyor' : 'Onaylandı'}
-                                                color={app.status === 'Pending' ? 'warning' : 'success'}
+                                                label={app.status === 'Pending' ? 'Bekliyor' : app.status === 'Confirmed' ? 'Onaylandı' : 'İptal Edildi'}
+                                                color={app.status === 'Pending' ? 'warning' : app.status === 'Confirmed' ? 'success' : 'error'}
                                                 size="small"
                                                 variant="outlined"
                                             />

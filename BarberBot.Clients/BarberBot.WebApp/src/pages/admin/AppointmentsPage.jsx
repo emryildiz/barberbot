@@ -190,6 +190,9 @@ const AppointmentsPage = () => {
                                     {app.status === 'Pending' && (
                                         <Chip label="Onay Bekliyor" color="warning" size="small" sx={{ alignSelf: 'flex-start' }} />
                                     )}
+                                    {app.status === 'Cancelled' && (
+                                        <Chip label="İptal Edildi" color="error" size="small" sx={{ alignSelf: 'flex-start' }} />
+                                    )}
                                 </Stack>
                             </CardContent>
                             <CardActions sx={{ justifyContent: 'flex-end', borderTop: '1px solid rgba(0, 0, 0, 0.05)' }}>
@@ -250,6 +253,9 @@ const AppointmentsPage = () => {
                                     <Typography variant="caption" color="text.secondary">{app.customer?.phoneNumber}</Typography>
                                     {app.status === 'Pending' && (
                                         <Chip label="Onay Bekliyor" color="warning" size="small" sx={{ ml: 1, height: 20, fontSize: '0.7rem' }} />
+                                    )}
+                                    {app.status === 'Cancelled' && (
+                                        <Chip label="İptal Edildi" color="error" size="small" sx={{ ml: 1, height: 20, fontSize: '0.7rem' }} />
                                     )}
                                 </TableCell>
                                 <TableCell>{app.service?.name}</TableCell>

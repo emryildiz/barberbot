@@ -58,6 +58,12 @@ public class BotService : IBotService
             case "SelectingTime":
                 await HandleTimeSelection(customer, message);
                 break;
+            case "SelectingCancellation":
+                await HandleCancellationSelection(customer, message);
+                break;
+            case "ConfirmingCancellation":
+                await HandleCancellationConfirmation(customer, message);
+                break;
             default:
                 await ResetState(customer, "Bir hata oluştu. Başa dönüyoruz.");
                 break;
@@ -84,9 +90,32 @@ public class BotService : IBotService
             customer.CurrentState = "SelectingService";
             await _context.SaveChangesAsync(CancellationToken.None);
         }
+        else if (message.Equals("İptal", StringComparison.OrdinalIgnoreCase))
+        {
+            var upcomingAppointments = await _context.Appointments
+                .Include(a => a.Service)
+                .Include(a => a.User)
+                .Where(a => a.CustomerId == customer.Id && a.StartTime > DateTime.UtcNow && a.Status != "Cancelled")
+                .OrderBy(a => a.StartTime)
+                .ToListAsync();
+
+            if (!upcomingAppointments.Any())
+            {
+                await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "İptal edilecek aktif randevunuz bulunmamaktadır.");
+                return;
+            }
+
+            var appointmentList = string.Join("\n", upcomingAppointments.Select((a, index) => 
+                $"{index + 1}. {a.StartTime.AddHours(3):dd.MM.yyyy HH:mm} - {a.Service.Name} ({a.User.Username})"));
+
+            await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"Lütfen iptal etmek istediğiniz randevunun numarasını yazınız:\n{appointmentList}");
+            
+            customer.CurrentState = "SelectingCancellation";
+            await _context.SaveChangesAsync(CancellationToken.None);
+        }
         else
         {
-            await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"Merhaba {customer.Name}! Randevu almak için 'Randevu' yazınız.");
+            await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"Merhaba {customer.Name}! Randevu almak için 'Randevu', randevu iptali için 'İptal' yazınız.");
         }
     }
 
@@ -342,6 +371,65 @@ public class BotService : IBotService
         {
             await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Geçersiz saat formatı. Lütfen SS:DD formatında girin (Örn: 09:00 veya 14.30).");
         }
+    }
+
+    private async Task HandleCancellationSelection(Customer customer, string message)
+    {
+        if (int.TryParse(message, out int selectionIndex) && selectionIndex > 0)
+        {
+            var upcomingAppointments = await _context.Appointments
+                .Include(a => a.Service)
+                .Include(a => a.User)
+                .Where(a => a.CustomerId == customer.Id && a.StartTime > DateTime.UtcNow && a.Status != "Cancelled")
+                .OrderBy(a => a.StartTime)
+                .ToListAsync();
+
+            if (selectionIndex <= upcomingAppointments.Count)
+            {
+                var appointment = upcomingAppointments[selectionIndex - 1];
+                // Store AppointmentId in SelectedServiceId (reusing field)
+                customer.SelectedServiceId = appointment.Id;
+                
+                await _whatsAppService.SendMessageAsync(customer.PhoneNumber, $"{appointment.StartTime.AddHours(3):dd.MM.yyyy HH:mm} tarihli randevunuzu iptal etmek istediğinize emin misiniz? (Evet/Hayır)");
+                
+                customer.CurrentState = "ConfirmingCancellation";
+                await _context.SaveChangesAsync(CancellationToken.None);
+                return;
+            }
+        }
+        
+        await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Geçersiz numara. Lütfen tekrar deneyin veya 'vazgeç' yazın.");
+    }
+
+    private async Task HandleCancellationConfirmation(Customer customer, string message)
+    {
+        if (message.Equals("evet", StringComparison.OrdinalIgnoreCase))
+        {
+            if (customer.SelectedServiceId.HasValue)
+            {
+                var appointment = await _context.Appointments.FindAsync(customer.SelectedServiceId.Value);
+                if (appointment != null)
+                {
+                    appointment.Status = "Cancelled";
+                    await _context.SaveChangesAsync(CancellationToken.None);
+                    
+                    await ResetState(customer, "Randevunuz başarıyla iptal edilmiştir.");
+                    return;
+                }
+                else
+                {
+                    await ResetState(customer, "Randevu bulunamadı.");
+                    return;
+                }
+            }
+        }
+        else if (message.Equals("hayır", StringComparison.OrdinalIgnoreCase) || message.Equals("vazgeç", StringComparison.OrdinalIgnoreCase))
+        {
+            await ResetState(customer, "İptal işlemi vazgeçildi.");
+            return;
+        }
+
+        await _whatsAppService.SendMessageAsync(customer.PhoneNumber, "Lütfen 'Evet' veya 'Hayır' yazınız.");
     }
 
     private async Task ResetState(Customer customer, string message)

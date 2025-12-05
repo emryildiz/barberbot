@@ -120,6 +120,27 @@ const DashboardPage = () => {
         }
     }, [filterStatus, todayAppointmentsList]);
 
+    const handleConfirm = async (id) => {
+        try {
+            // We need to fetch the appointment first to get start/end times as API requires them for update
+            // Or we can just find it in our local list
+            const appointment = todayAppointmentsList.find(a => a.id === id);
+            if (!appointment) return;
+
+            await api.put(`/appointments/${id}`, {
+                startTime: appointment.startTime,
+                endTime: appointment.endTime,
+                status: 'Confirmed'
+            });
+
+            // Update local state
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Error confirming appointment:", error);
+            alert("Randevu onaylanırken bir hata oluştu.");
+        }
+    };
+
     const StatCard = ({ title, value, icon, color }) => (
         <Card sx={{
             height: '100%',
@@ -266,6 +287,7 @@ const DashboardPage = () => {
                                 <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Hizmet</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Berber</TableCell>
                                 <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>Durum</TableCell>
+                                <TableCell sx={{ fontWeight: 'bold', borderBottom: 'none' }}>İşlemler</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -293,11 +315,24 @@ const DashboardPage = () => {
                                                 variant="outlined"
                                             />
                                         </TableCell>
+                                        <TableCell>
+                                            {app.status === 'Pending' && (
+                                                <Button
+                                                    size="small"
+                                                    variant="contained"
+                                                    color="success"
+                                                    onClick={() => handleConfirm(app.id)}
+                                                    sx={{ textTransform: 'none' }}
+                                                >
+                                                    Onayla
+                                                </Button>
+                                            )}
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                                    <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                                         <Typography color="text.secondary">
                                             Bugün için kayıtlı randevu bulunmamaktadır.
                                         </Typography>

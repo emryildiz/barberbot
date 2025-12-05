@@ -13,7 +13,8 @@ import {
     MenuItem,
     Alert,
     FormControlLabel,
-    Switch
+    Switch,
+    Snackbar
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import api from '../../services/api';
@@ -26,11 +27,18 @@ const AddAppointmentPage = () => {
 
     const [isNewCustomer, setIsNewCustomer] = useState(false);
 
+    // Calculate default date (today) and time (next 30 min slot)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${year}-${month}-${day}`;
+
     const [formData, setFormData] = useState({
         customerId: '',
         userId: '',
         serviceId: '',
-        date: '',
+        date: todayStr,
         time: '',
         newCustomerName: '',
         newCustomerPhone: ''
@@ -38,6 +46,19 @@ const AddAppointmentPage = () => {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
+
+    const handleCloseSnackbar = () => {
+        setSnackbar({ ...snackbar, open: false });
+    };
+
+    const [availableSlots, setAvailableSlots] = useState([]);
+    const [slotsLoading, setSlotsLoading] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -51,7 +72,11 @@ const AddAppointmentPage = () => {
                 setBarbers(barbersRes.data);
                 setServices(servicesRes.data);
             } catch (err) {
-                setError('Veriler yüklenirken hata oluştu.');
+                setSnackbar({
+                    open: true,
+                    message: 'Veriler yüklenirken hata oluştu.',
+                    severity: 'error'
+                });
                 console.error(err);
             } finally {
                 setLoading(false);
@@ -60,6 +85,42 @@ const AddAppointmentPage = () => {
 
         fetchData();
     }, []);
+
+    useEffect(() => {
+        const fetchSlots = async () => {
+            if (formData.userId && formData.serviceId && formData.date) {
+                setSlotsLoading(true);
+                try {
+                    const res = await api.get('/appointments/available-slots', {
+                        params: {
+                            barberId: formData.userId,
+                            serviceId: formData.serviceId,
+                            date: formData.date
+                        }
+                    });
+                    setAvailableSlots(res.data);
+
+                    // Reset time if current time is not in available slots
+                    if (formData.time && !res.data.includes(formData.time)) {
+                        setFormData(prev => ({ ...prev, time: '' }));
+                    }
+                } catch (err) {
+                    console.error("Error fetching slots:", err);
+                    setSnackbar({
+                        open: true,
+                        message: 'Uygun saatler getirilemedi.',
+                        severity: 'error'
+                    });
+                } finally {
+                    setSlotsLoading(false);
+                }
+            } else {
+                setAvailableSlots([]);
+            }
+        };
+
+        fetchSlots();
+    }, [formData.userId, formData.serviceId, formData.date]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -88,7 +149,17 @@ const AddAppointmentPage = () => {
 
             await api.post('/appointments', appointmentRequest);
 
-            navigate('/admin/appointments');
+            setSnackbar({
+                open: true,
+                message: 'Randevu başarıyla oluşturuldu!',
+                severity: 'success'
+            });
+
+            // Wait a bit before navigating so user sees the success message
+            setTimeout(() => {
+                navigate('/admin/appointments');
+            }, 1500);
+
         } catch (err) {
             // Extract the error message from the response
             let errorMessage = 'Randevu oluşturulurken hata oluştu.';
@@ -103,7 +174,11 @@ const AddAppointmentPage = () => {
                 errorMessage = err.message;
             }
 
-            setError(errorMessage);
+            setSnackbar({
+                open: true,
+                message: errorMessage,
+                severity: 'error'
+            });
             console.error(err);
         }
     };
@@ -131,12 +206,6 @@ const AddAppointmentPage = () => {
                     Geri Dön
                 </Button>
             </Box>
-
-            {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
-                    {error}
-                </Alert>
-            )}
 
             <Paper sx={{ p: 4, maxWidth: 800, mx: 'auto', border: '1px solid rgba(255, 255, 255, 0.12)' }}>
                 <Box component="form" onSubmit={handleSubmit}>
@@ -245,24 +314,25 @@ const AddAppointmentPage = () => {
                             />
                         </Box>
                         <Box sx={{ flex: 1 }}>
-                            <FormControl fullWidth required>
-                                <InputLabel>Saat</InputLabel>
+                            <FormControl fullWidth required disabled={!formData.userId || !formData.serviceId || !formData.date || slotsLoading}>
+                                <InputLabel>{slotsLoading ? 'Saatler Yükleniyor...' : 'Saat'}</InputLabel>
                                 <Select
                                     name="time"
                                     value={formData.time}
-                                    label="Saat"
+                                    label={slotsLoading ? 'Saatler Yükleniyor...' : 'Saat'}
                                     onChange={handleChange}
                                 >
-                                    {Array.from({ length: 24 * 2 }).map((_, i) => {
-                                        const hour = Math.floor(i / 2);
-                                        const minute = i % 2 === 0 ? '00' : '30';
-                                        const timeString = `${hour.toString().padStart(2, '0')}:${minute}`;
-                                        return (
-                                            <MenuItem key={timeString} value={timeString}>
-                                                {timeString}
+                                    {availableSlots.length > 0 ? (
+                                        availableSlots.map((slot) => (
+                                            <MenuItem key={slot} value={slot}>
+                                                {slot}
                                             </MenuItem>
-                                        );
-                                    })}
+                                        ))
+                                    ) : (
+                                        <MenuItem disabled value="">
+                                            <em>Uygun saat bulunamadı</em>
+                                        </MenuItem>
+                                    )}
                                 </Select>
                             </FormControl>
                         </Box>
@@ -279,6 +349,17 @@ const AddAppointmentPage = () => {
                     </Button>
                 </Box>
             </Paper>
+
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };

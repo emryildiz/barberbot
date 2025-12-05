@@ -2,6 +2,7 @@ using BarberBot.Application.Appointments.Commands.CreateAppointment;
 using BarberBot.Application.Appointments.Commands.DeleteAppointment;
 using BarberBot.Application.Appointments.Commands.UpdateAppointment;
 using BarberBot.Application.Appointments.Queries.GetAppointments;
+using BarberBot.Application.Appointments.Queries.GetAvailableSlots;
 using BarberBot.Application.DTOs;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -26,6 +27,19 @@ public class AppointmentsController : ControllerBase
     {
         var appointments = await _mediator.Send(new GetAppointmentsQuery());
         return Ok(appointments);
+    }
+
+    [HttpGet("available-slots")]
+    public async Task<IActionResult> GetAvailableSlots([FromQuery] int barberId, [FromQuery] int serviceId, [FromQuery] DateTime date)
+    {
+        var query = new GetAvailableSlotsQuery
+        {
+            BarberId = barberId,
+            ServiceId = serviceId,
+            Date = date
+        };
+        var slots = await _mediator.Send(query);
+        return Ok(slots);
     }
 
     [HttpPost]

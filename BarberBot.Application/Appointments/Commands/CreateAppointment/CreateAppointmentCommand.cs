@@ -27,8 +27,12 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
 
     public async Task<Appointment> Handle(CreateAppointmentCommand request, CancellationToken cancellationToken)
     {
+        // Convert to Turkey Time for validation
+        var turkeyTime = request.StartTime.AddHours(3);
+        var turkeyEndTime = request.EndTime.AddHours(3);
+
         // Check if shop is open on that day
-        var dayOfWeek = (int)request.StartTime.DayOfWeek;
+        var dayOfWeek = (int)turkeyTime.DayOfWeek;
         var workingHour = await _context.WorkingHours.FirstOrDefaultAsync(w => w.DayOfWeek == dayOfWeek, cancellationToken);
 
         if (workingHour == null || workingHour.IsClosed)
@@ -37,11 +41,11 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
         }
 
         // Check time range
-        var time = request.StartTime.TimeOfDay;
+        var time = turkeyTime.TimeOfDay;
         var start = TimeSpan.Parse(workingHour.StartTime);
         var end = TimeSpan.Parse(workingHour.EndTime);
 
-        if (time < start || request.EndTime.TimeOfDay > end)
+        if (time < start || turkeyEndTime.TimeOfDay > end)
         {
             throw new ArgumentException($"Randevu saatleri çalışma saatleri ({workingHour.StartTime} - {workingHour.EndTime}) arasında olmalıdır.");
         }

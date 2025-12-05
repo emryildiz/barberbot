@@ -30,6 +30,8 @@ services:
       - ConnectionStrings__DefaultConnection=Host=db;Database=BarberBotDb;Username=postgres;Password=YourStrong@Password123
       - Serilog__WriteTo__2__Args__serverUrl=http://seq:5341
       - ASPNETCORE_HTTP_PORTS=8080
+    volumes:
+      - ./keys:/root/.aspnet/DataProtection-Keys
     ports:
       - "5117:8080"
     depends_on:

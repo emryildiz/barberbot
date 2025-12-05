@@ -359,6 +359,7 @@ const AdminLayout = () => {
                 sx={{
                     flexGrow: 1,
                     p: { xs: 1, sm: 3 },
+                    pt: { xs: 3, sm: 3 }, // Increased top padding for mobile
                     width: { xs: '100%', sm: `calc(100% - ${drawerWidth}px)` },
                     bgcolor: '#f5f6fa',
                     minHeight: '100vh',

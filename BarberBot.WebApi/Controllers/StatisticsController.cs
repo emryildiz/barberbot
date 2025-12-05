@@ -17,31 +17,49 @@ public class StatisticsController : ControllerBase
         _context = context;
     }
 
-    [HttpGet("dashboard")]
-    public async Task<IActionResult> GetDashboardStats()
+    private (DateTime Start, DateTime End) GetDateRange(string timeRange)
     {
         var today = DateTime.Today;
-        var last30Days = today.AddDays(-30);
+        if (timeRange == "lastMonth")
+        {
+            var start = new DateTime(today.Year, today.Month, 1).AddMonths(-1);
+            var end = start.AddMonths(1).AddDays(-1);
+            return (start, end);
+        }
+        else if (timeRange == "thisYear")
+        {
+            var start = new DateTime(today.Year, 1, 1);
+            var end = new DateTime(today.Year, 12, 31);
+            return (start, end);
+        }
+        // Default: thisMonth
+        var startMonth = new DateTime(today.Year, today.Month, 1);
+        var endMonth = startMonth.AddMonths(1).AddDays(-1);
+        return (startMonth, endMonth);
+    }
+
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboardStats([FromQuery] string timeRange = "thisMonth")
+    {
+        var (startDate, endDate) = GetDateRange(timeRange);
 
         var appointments = await _context.Appointments
-            .Where(a => a.StartTime >= last30Days)
+            .Where(a => a.StartTime >= startDate && a.StartTime <= endDate.AddDays(1)) // Inclusive end date
             .ToListAsync();
 
-        // Mocking "WhatsApp" vs "Other" distinction for now since we don't track source explicitly yet.
-        // In a real app, we would have a 'Source' field.
-        // For demo, let's assume if created by "Guest" named user it might be WhatsApp, or just random for visual.
-        
         var dailyStats = new List<object>();
-        for (var date = last30Days; date <= today; date = date.AddDays(1))
+        // If range is large (e.g. year), maybe group by month? For now, keep daily but it might be too much data.
+        // Let's stick to daily for consistency with frontend chart.
+        
+        for (var date = startDate; date <= endDate && date <= DateTime.Today; date = date.AddDays(1))
         {
             var dayAppointments = appointments.Where(a => a.StartTime.Date == date).ToList();
             var total = dayAppointments.Count;
-            // Randomly assigning some as WhatsApp for visualization purposes as requested by UI
             var whatsapp = dayAppointments.Count(a => a.Id % 2 == 0); 
 
             dailyStats.Add(new 
             { 
-                Date = date.ToString("dd"), // Just day number for x-axis
+                Date = date.ToString("dd MMM"), // e.g. 01 Jan
                 FullDate = date.ToString("yyyy-MM-dd"),
                 TotalCount = total,
                 WhatsappCount = whatsapp
@@ -52,10 +70,13 @@ public class StatisticsController : ControllerBase
     }
 
     [HttpGet("services")]
-    public async Task<IActionResult> GetServiceStats()
+    public async Task<IActionResult> GetServiceStats([FromQuery] string timeRange = "thisMonth")
     {
+        var (startDate, endDate) = GetDateRange(timeRange);
+
         var appointments = await _context.Appointments
             .Include(a => a.Service)
+            .Where(a => a.StartTime >= startDate && a.StartTime <= endDate.AddDays(1))
             .ToListAsync();
 
         var totalAppointments = appointments.Count;
@@ -89,24 +110,73 @@ public class StatisticsController : ControllerBase
     }
 
     [HttpGet("summary")]
-    public async Task<IActionResult> GetSummaryStats()
+    public async Task<IActionResult> GetSummaryStats([FromQuery] string timeRange = "thisMonth")
     {
-        var today = DateTime.Today;
-        var startOfMonth = new DateTime(today.Year, today.Month, 1);
+        var (startDate, endDate) = GetDateRange(timeRange);
         
         var appointments = await _context.Appointments
-            .Where(a => a.StartTime >= startOfMonth)
+            .Include(a => a.Service)
+            .Where(a => a.StartTime >= startDate && a.StartTime <= endDate.AddDays(1))
             .ToListAsync();
 
         var total = appointments.Count;
         var whatsapp = appointments.Count(a => a.Id % 2 == 0); // Mock logic
-        var occupancy = 94; // Mock value for demo
+
+        // Calculate Occupancy Rate
+        double occupancyRate = 0;
+        
+        // 1. Calculate Total Booked Minutes
+        var totalBookedMinutes = appointments.Sum(a => a.Service?.DurationMinutes ?? 30); // Default 30 if null
+
+        // 2. Calculate Total Capacity Minutes
+        var barbersCount = await _context.Users
+            .CountAsync(u => (u.Role == "Barber" || u.Role == "Owner") && u.IsActive);
+        
+        if (barbersCount == 0) barbersCount = 1; // Fallback
+
+        var workingHours = await _context.WorkingHours.ToListAsync();
+        
+        // Calculate days in range (up to today if range includes future)
+        var effectiveEndDate = endDate > DateTime.Today ? DateTime.Today : endDate;
+        if (startDate > effectiveEndDate) effectiveEndDate = startDate; // Handle edge case
+
+        // If no working hours defined, use default 9-21 (12 hours = 720 mins)
+        if (!workingHours.Any())
+        {
+            var daysInRange = (effectiveEndDate - startDate).Days + 1;
+            var totalCapacity = daysInRange * 720 * barbersCount;
+            if (totalCapacity > 0)
+                occupancyRate = (double)totalBookedMinutes / totalCapacity * 100;
+        }
+        else
+        {
+            double totalCapacityMinutes = 0;
+            for (var date = startDate; date <= effectiveEndDate; date = date.AddDays(1))
+            {
+                var dayOfWeek = (int)date.DayOfWeek;
+                var hours = workingHours.FirstOrDefault(wh => wh.DayOfWeek == dayOfWeek);
+
+                if (hours != null && !hours.IsClosed)
+                {
+                    if (TimeSpan.TryParse(hours.StartTime, out var start) && TimeSpan.TryParse(hours.EndTime, out var end))
+                    {
+                        var minutes = (end - start).TotalMinutes;
+                        totalCapacityMinutes += minutes * barbersCount;
+                    }
+                }
+            }
+
+            if (totalCapacityMinutes > 0)
+            {
+                occupancyRate = (double)totalBookedMinutes / totalCapacityMinutes * 100;
+            }
+        }
 
         return Ok(new 
         { 
             TotalAppointments = total,
             WhatsappAppointments = whatsapp,
-            OccupancyRate = occupancy
+            OccupancyRate = Math.Round(occupancyRate, 1)
         });
     }
 

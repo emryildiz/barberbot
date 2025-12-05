@@ -2,11 +2,13 @@ namespace BarberBot.Application.DTOs;
 
 public class CreateAppointmentRequest
 {
-    public int CustomerId { get; set; }
+    public int? CustomerId { get; set; }
     public int UserId { get; set; }
     public int ServiceId { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
+    public string? NewCustomerName { get; set; }
+    public string? NewCustomerPhone { get; set; }
 }
 
 public class UpdateAppointmentRequest

@@ -24,7 +24,8 @@ import {
     Card,
     CardContent,
     CardActions,
-    Grid
+    Grid,
+    TextField
 } from '@mui/material';
 import { Add, Edit, Delete, FilterList, Sort, AccessTime, Person, ContentCut, CheckCircle } from '@mui/icons-material';
 import api from '../../services/api';
@@ -41,6 +42,7 @@ const AppointmentsPage = () => {
 
     // Filters & Sorting
     const [selectedBarber, setSelectedBarber] = useState('');
+    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
 
     // Get search query from URL
@@ -55,7 +57,7 @@ const AppointmentsPage = () => {
 
     useEffect(() => {
         applyFiltersAndSort();
-    }, [appointments, selectedBarber, sortOrder, searchQuery]);
+    }, [appointments, selectedBarber, selectedDate, sortOrder, searchQuery]);
 
     // ... loadData ...
 
@@ -76,6 +78,11 @@ const AppointmentsPage = () => {
         // Filter by Barber
         if (selectedBarber) {
             result = result.filter(app => app.userId === selectedBarber);
+        }
+
+        // Filter by Date
+        if (selectedDate) {
+            result = result.filter(app => app.startTime.startsWith(selectedDate));
         }
 
         // Sort by Date
@@ -314,7 +321,7 @@ const AppointmentsPage = () => {
 
             <Paper sx={{ p: 2, mb: 3, border: '1px solid rgba(0, 0, 0, 0.12)' }}>
                 <Stack direction={isMobile ? "column" : "row"} spacing={2} alignItems={isMobile ? "stretch" : "center"}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         <FilterList color="action" />
                         <FormControl size="small" fullWidth={isMobile} sx={{ minWidth: 200 }}>
                             <InputLabel>Berber Filtrele</InputLabel>
@@ -333,6 +340,14 @@ const AppointmentsPage = () => {
                                 ))}
                             </Select>
                         </FormControl>
+                        <TextField
+                            type="date"
+                            size="small"
+                            value={selectedDate}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            sx={{ minWidth: 200 }}
+                            fullWidth={isMobile}
+                        />
                     </Box>
 
                     {!isMobile && <Box sx={{ flexGrow: 1 }} />}

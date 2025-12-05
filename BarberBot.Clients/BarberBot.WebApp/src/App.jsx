@@ -19,6 +19,7 @@ import SettingsPage from './pages/admin/SettingsPage';
 import UsersPage from './pages/admin/UsersPage';
 import ProfilePage from './pages/admin/ProfilePage';
 import ProtectedRoute from './components/ProtectedRoute';
+import NotFoundPage from './pages/common/NotFoundPage';
 
 function App() {
   return (
@@ -48,7 +49,9 @@ function App() {
           </Route>
 
           {/* Default Redirect */}
-          <Route path="*" element={<Navigate to="/admin/login" replace />} />
+          {/* 404 Not Found */}
+          <Route path="/404" element={<NotFoundPage />} />
+          <Route path="*" element={<Navigate to="/404" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>

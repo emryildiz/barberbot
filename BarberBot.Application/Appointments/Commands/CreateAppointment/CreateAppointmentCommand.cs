@@ -7,11 +7,13 @@ namespace BarberBot.Application.Appointments.Commands.CreateAppointment;
 
 public record CreateAppointmentCommand : IRequest<Appointment>
 {
-    public int CustomerId { get; init; }
+    public int? CustomerId { get; init; }
     public int UserId { get; init; }
     public int ServiceId { get; init; }
     public DateTime StartTime { get; init; }
     public DateTime EndTime { get; init; }
+    public string? NewCustomerName { get; init; }
+    public string? NewCustomerPhone { get; init; }
 }
 
 public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointmentCommand, Appointment>
@@ -56,9 +58,31 @@ public class CreateAppointmentCommandHandler : IRequestHandler<CreateAppointment
             throw new ArgumentException("Seçilen berberin bu saat aralığında başka bir randevusu bulunmaktadır.");
         }
 
+        int customerId;
+
+        if (request.CustomerId.HasValue)
+        {
+            customerId = request.CustomerId.Value;
+        }
+        else if (!string.IsNullOrEmpty(request.NewCustomerName) && !string.IsNullOrEmpty(request.NewCustomerPhone))
+        {
+            var customer = new Customer
+            {
+                Name = request.NewCustomerName,
+                PhoneNumber = request.NewCustomerPhone
+            };
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync(cancellationToken);
+            customerId = customer.Id;
+        }
+        else
+        {
+            throw new ArgumentException("Müşteri seçilmeli veya yeni müşteri bilgileri girilmelidir.");
+        }
+
         var appointment = new Appointment
         {
-            CustomerId = request.CustomerId,
+            CustomerId = customerId,
             UserId = request.UserId,
             ServiceId = request.ServiceId,
             StartTime = request.StartTime,

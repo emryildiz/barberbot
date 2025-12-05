@@ -35,14 +35,15 @@ const StatisticsPage = () => {
     const [serviceStats, setServiceStats] = useState({ pieChart: [], popular: [] });
     const [summaryStats, setSummaryStats] = useState({ totalAppointments: 0, whatsappAppointments: 0, occupancyRate: 0 });
     const [loading, setLoading] = useState(true);
+    const [timeRange, setTimeRange] = useState('thisMonth');
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [dashboardRes, servicesRes, summaryRes] = await Promise.all([
-                    api.get('/statistics/dashboard'),
-                    api.get('/statistics/services'),
-                    api.get('/statistics/summary')
+                    api.get(`/statistics/dashboard?timeRange=${timeRange}`),
+                    api.get(`/statistics/services?timeRange=${timeRange}`),
+                    api.get(`/statistics/summary?timeRange=${timeRange}`)
                 ]);
                 setDashboardStats(dashboardRes.data);
 
@@ -65,10 +66,23 @@ const StatisticsPage = () => {
         };
 
         fetchData();
-    }, []);
+    }, [timeRange]);
 
     const handleTabChange = (event, newValue) => {
         setTabValue(newValue);
+    };
+
+    const getTitleDate = () => {
+        const now = new Date();
+        if (timeRange === 'thisMonth') {
+            return now.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+        } else if (timeRange === 'lastMonth') {
+            const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            return lastMonth.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+        } else if (timeRange === 'thisYear') {
+            return now.getFullYear().toString();
+        }
+        return '';
     };
 
     if (loading) {
@@ -110,6 +124,8 @@ const StatisticsPage = () => {
                                     </InputAdornment>
                                 ),
                             }}
+                            value={timeRange}
+                            onChange={(e) => setTimeRange(e.target.value)}
                         >
                             <option value="thisMonth">Bu Ay</option>
                             <option value="lastMonth">Geçen Ay</option>
@@ -138,8 +154,6 @@ const StatisticsPage = () => {
                 >
                     <Tab label="Randevular" />
                     <Tab label="Hizmet Dağılımı" />
-                    <Tab label="Berber Performansı" disabled />
-                    <Tab label="Müşteri Analizi" disabled />
                 </Tabs>
             </Paper>
 
@@ -147,7 +161,7 @@ const StatisticsPage = () => {
             {tabValue === 0 && (
                 <Box>
                     <Typography variant="h6" gutterBottom sx={{ mb: 3, color: 'text.primary' }}>
-                        Randevu Raporu: Nisan 2025
+                        Randevu Raporu: {getTitleDate()}
                     </Typography>
 
                     <Grid container spacing={3} mb={4}>
@@ -214,7 +228,7 @@ const StatisticsPage = () => {
             {tabValue === 1 && (
                 <Box>
                     <Typography variant="h6" gutterBottom sx={{ mb: 3, color: 'text.primary' }}>
-                        Hizmet Dağılımı Raporu: Nisan 2025
+                        Hizmet Dağılımı Raporu: {getTitleDate()}
                     </Typography>
 
                     <Paper sx={{ p: 4, borderRadius: 2 }}>
@@ -227,8 +241,8 @@ const StatisticsPage = () => {
                                                 data={serviceStats.pieChart}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={100}
+                                                innerRadius="60%"
+                                                outerRadius="80%"
                                                 paddingAngle={2}
                                                 dataKey="value"
                                             >

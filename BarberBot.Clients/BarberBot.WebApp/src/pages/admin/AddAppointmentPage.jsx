@@ -64,19 +64,7 @@ const AddAppointmentPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            let customerId = formData.customerId;
-
-            if (isNewCustomer) {
-                const customerRes = await api.post('/customers', {
-                    name: formData.newCustomerName,
-                    phoneNumber: formData.newCustomerPhone
-                });
-                customerId = customerRes.data.id;
-            }
-
             // Combine date and time, explicitly setting Turkey Time (+03:00)
-            // This ensures that if user selects 20:00, it is treated as 20:00 TRT (17:00 UTC)
-            // regardless of the browser's local timezone.
             const startDateTime = new Date(`${formData.date}T${formData.time}:00+03:00`);
 
             // Find service duration to calculate end time
@@ -84,13 +72,21 @@ const AddAppointmentPage = () => {
             const duration = service ? service.durationMinutes : 30;
             const endDateTime = new Date(startDateTime.getTime() + duration * 60000);
 
-            await api.post('/appointments', {
-                customerId: parseInt(customerId),
+            const appointmentRequest = {
                 userId: parseInt(formData.userId),
                 serviceId: parseInt(formData.serviceId),
                 startTime: startDateTime.toISOString(),
                 endTime: endDateTime.toISOString()
-            });
+            };
+
+            if (isNewCustomer) {
+                appointmentRequest.newCustomerName = formData.newCustomerName;
+                appointmentRequest.newCustomerPhone = formData.newCustomerPhone;
+            } else {
+                appointmentRequest.customerId = parseInt(formData.customerId);
+            }
+
+            await api.post('/appointments', appointmentRequest);
 
             navigate('/admin/appointments');
         } catch (err) {

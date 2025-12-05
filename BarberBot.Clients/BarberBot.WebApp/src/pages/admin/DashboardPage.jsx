@@ -16,7 +16,9 @@ import {
     Button,
     CircularProgress,
     Menu,
-    MenuItem
+    MenuItem,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 import {
     CalendarToday,
@@ -45,6 +47,8 @@ const DashboardPage = () => {
     const [filterStatus, setFilterStatus] = useState('All'); // 'All', 'Pending', 'Confirmed'
 
     const [role, setRole] = useState(null);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     useEffect(() => {
         fetchDashboardData();
@@ -231,7 +235,7 @@ const DashboardPage = () => {
                             onClick={handleFilterClick}
                             sx={{ borderRadius: 2, color: 'text.primary', borderColor: 'rgba(0,0,0,0.12)' }}
                         >
-                            Filtrele {filterStatus !== 'All' && `(${filterStatus === 'Pending' ? 'Bekleyen' : 'Onaylı'})`}
+                            Filtrele {(!isMobile && filterStatus !== 'All') && `(${filterStatus === 'Pending' ? 'Bekleyen' : 'Onaylı'})`}
                         </Button>
                         <Menu
                             anchorEl={filterAnchorEl}

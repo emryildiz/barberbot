@@ -39,7 +39,9 @@ public class AppointmentsController : ControllerBase
                 UserId = request.UserId,
                 ServiceId = request.ServiceId,
                 StartTime = request.StartTime,
-                EndTime = request.EndTime
+                EndTime = request.EndTime,
+                NewCustomerName = request.NewCustomerName,
+                NewCustomerPhone = request.NewCustomerPhone
             };
 
             var appointment = await _mediator.Send(command);

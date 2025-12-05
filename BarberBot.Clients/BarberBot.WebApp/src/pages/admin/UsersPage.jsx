@@ -21,7 +21,9 @@ import {
     FormControl,
     InputLabel,
     Select,
-    MenuItem
+    MenuItem,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Person as PersonIcon } from '@mui/icons-material';
 import api from '../../services/api';
@@ -76,19 +78,23 @@ const UsersPage = () => {
         }
     };
 
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h4" fontWeight="bold">
+                <Typography variant="h4" fontWeight="bold" sx={{ fontSize: isMobile ? '1.5rem' : '2.125rem' }}>
                     Kullanıcı Yönetimi
                 </Typography>
                 <Button
                     variant="contained"
                     startIcon={<AddIcon />}
                     onClick={() => setOpen(true)}
+                    size={isMobile ? "small" : "medium"}
                     sx={{ bgcolor: '#000', '&:hover': { bgcolor: '#333' } }}
                 >
-                    Yeni Kullanıcı Ekle
+                    {isMobile ? "Ekle" : "Yeni Kullanıcı Ekle"}
                 </Button>
             </Box>
 

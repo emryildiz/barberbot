@@ -9,7 +9,7 @@ builder.Host.UseSerilog((context, configuration) =>
 
 // Add services to the container.
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment.IsDevelopment());
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<BarberBot.Application.Common.Interfaces.ICurrentUserService, BarberBot.WebApi.Services.CurrentUserService>();
 

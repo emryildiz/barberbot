@@ -25,7 +25,9 @@ import {
     CardContent,
     CardActions,
     Grid,
-    TextField
+    TextField,
+    Checkbox,
+    FormControlLabel
 } from '@mui/material';
 import { Add, Edit, Delete, FilterList, Sort, AccessTime, Person, ContentCut, CheckCircle } from '@mui/icons-material';
 import api from '../../services/api';
@@ -44,6 +46,7 @@ const AppointmentsPage = () => {
     const [selectedBarber, setSelectedBarber] = useState('');
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
+    const [showCancelled, setShowCancelled] = useState(true);
 
     // Get search query from URL
     const searchParams = new URLSearchParams(location.search);
@@ -57,7 +60,7 @@ const AppointmentsPage = () => {
 
     useEffect(() => {
         applyFiltersAndSort();
-    }, [appointments, selectedBarber, selectedDate, sortOrder, searchQuery]);
+    }, [appointments, selectedBarber, selectedDate, sortOrder, searchQuery, showCancelled]);
 
     // ... loadData ...
 
@@ -83,6 +86,11 @@ const AppointmentsPage = () => {
         // Filter by Date
         if (selectedDate) {
             result = result.filter(app => app.startTime.startsWith(selectedDate));
+        }
+
+        // Filter Cancelled
+        if (!showCancelled) {
+            result = result.filter(app => app.status !== 'Cancelled');
         }
 
         // Sort by Date
@@ -201,7 +209,7 @@ const AppointmentsPage = () => {
                                         Onayla
                                     </Button>
                                 )}
-                                <Button size="small" startIcon={<Edit />} disabled={past}>
+                                <Button size="small" startIcon={<Edit />} disabled={past} onClick={() => navigate(`/admin/appointments/edit/${app.id}`)}>
                                     Düzenle
                                 </Button>
                                 <Button size="small" color="error" startIcon={<Delete />} onClick={() => handleDelete(app.id)}>
@@ -282,7 +290,7 @@ const AppointmentsPage = () => {
                                         </Tooltip>
                                     )}
                                     <Tooltip title="Düzenle">
-                                        <IconButton color="primary" aria-label="edit" disabled={past}>
+                                        <IconButton color="primary" aria-label="edit" disabled={past} onClick={() => navigate(`/admin/appointments/edit/${app.id}`)}>
                                             <Edit />
                                         </IconButton>
                                     </Tooltip>
@@ -353,6 +361,16 @@ const AppointmentsPage = () => {
                             onChange={(e) => setSelectedDate(e.target.value)}
                             sx={{ minWidth: 200 }}
                             fullWidth={isMobile}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={showCancelled}
+                                    onChange={(e) => setShowCancelled(e.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label="İptalleri Göster"
                         />
                     </Box>
 

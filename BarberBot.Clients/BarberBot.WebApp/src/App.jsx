@@ -6,6 +6,7 @@ import DashboardPage from './pages/admin/DashboardPage';
 import CalendarPage from './pages/admin/CalendarPage';
 import AppointmentsPage from './pages/admin/AppointmentsPage';
 import AddAppointmentPage from './pages/admin/AddAppointmentPage';
+import EditAppointmentPage from './pages/admin/EditAppointmentPage';
 
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -38,6 +39,7 @@ function App() {
               <Route path="calendar" element={<CalendarPage />} />
               <Route path="appointments" element={<AppointmentsPage />} />
               <Route path="appointments/new" element={<AddAppointmentPage />} />
+              <Route path="appointments/edit/:id" element={<EditAppointmentPage />} />
               <Route path="statistics" element={<StatisticsPage />} />
               <Route path="barbers" element={<BarbersPage />} />
               <Route path="customers" element={<CustomersPage />} />
